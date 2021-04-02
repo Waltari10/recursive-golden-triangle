@@ -194,9 +194,9 @@ function drawGoldenTriangle(pos, height, rotation, color = [0,255,0,255], pivot)
 
   const baseLength = (Math.tan(degToRad(18)) * height) * 2;
 
-  const pointA = rotatePoint(pivot, rotation, [pos[0], pos[1] - height]); // sharpest angle
-  const pointB = rotatePoint(pivot, rotation, [pos[0] - (baseLength / 2), pos[1]]); 
-  const pointC = rotatePoint(pivot, rotation, [pos[0] + (baseLength / 2), pos[1]]);
+  const pointA = rotatePoint(pos, rotation, [pos[0], pos[1] - height]); // sharpest angle
+  const pointB = rotatePoint(pos, rotation, [pos[0] - (baseLength / 2), pos[1]]); 
+  const pointC = rotatePoint(pos, rotation, [pos[0] + (baseLength / 2), pos[1]]);
 
 
   drawTriangle(pointA, pointB, pointC, [0,255,0,255]);
@@ -211,7 +211,7 @@ function drawRecursiveGoldenTriangle(pos, height, rotation, pivot) {
   drawGoldenTriangle(pos, height, rotation, [0,255,0,255], pivot);
   i++;
 
-  if (i > 1) {
+  if (i > 10) {
     return;
   }
 
@@ -238,7 +238,7 @@ function drawRecursiveGoldenTriangle(pos, height, rotation, pivot) {
   // const newPivot
 
 
-  drawX(newPos, [255,255,255,255]);
+  // drawX(newPos, [255,255,255,255]);
 
   // TODO: The new pivot point probably needs to be relative to the parent triangle.
   // using the same pivot for every single triangle doesn't work.
@@ -293,8 +293,8 @@ function loop() {
   triangleRotation = triangleRotation + 0.005;
 
 
-  drawX(pivotPoint)
-  drawX(triangleLocation)
+  // drawX(pivotPoint)
+  // drawX(triangleLocation)
 
   
 
