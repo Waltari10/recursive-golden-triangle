@@ -1,0 +1,16 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  border: 0;
+  overflow: hidden;
+  display: block;
+}
+
+canvas {
+  background-color: black;
+  border: 1px dotted black;
+  width: "calc(100% - 2px)";
+  height: "calc(100% - 4px)"
+}
