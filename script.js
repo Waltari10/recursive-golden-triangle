@@ -89,18 +89,6 @@ function drawPixel(x, y, r, g, b, a) {
 }
 
 
-
-// Instiate a triangle spawner
-// Triangle spawner checks on every frame if new triangle needs to be spawned or old ones removed
-// Adding/removing depends on if triangle would actually be visible. For example if side length is less than one pixel, or larger than screen.
-// Triangle spawner rotates slowly // or camera rotates
-// Triangle spawner slowly scales the existing triangles to a bigger size // or camera zooms
-// The fuck is a camera?
-
-// https://www.youtube.com/watch?v=0rlNHYHhrWs
-// Thickness, color, borderRadius
-
-
 function drawTriangle(posA, posB, posC, color) {
   drawLine(posA, posB, color);
   drawLine(posB, posC, color);
@@ -114,24 +102,16 @@ function degToRad (deg) {
 
 function drawLine(start, end, color = [0,255,0,255]) {
 
-  // Line is pretty much a perpendicular triangle, unless it's a straight line. Then it's a really flat one.
-
   const drawDensity = 1; // 1px
   // Pythagoram theorem
   // Hypotenuse
-  const lineLength = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));// hypotenuse
+  const lineLength = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));
   
   const xLength = end[0] - start[0];
   const yLength = end[1] - start[1];
 
-  // console.log(xLength, yLength, lineLength)
-
-  // simple atan doesn't return correct angle with negative values. Luckily atan2 takes care of it for 
+  // simple atan doesn't return correct angle with negative values. atan2 takes care of it
   const angleRad = Math.atan2(yLength,  xLength);
-
-  // You have a triangle
-  // You know hypotenuse
-  // and location of A and B 
 
   for(let i = 0; i < lineLength; i = i + drawDensity) {
 
@@ -235,19 +215,7 @@ function drawRecursiveGoldenTriangle(pos, height, rotation, pivot) {
   
   const newPos = [newPointC[0] + newPosXRelative, newPointC[1] + newPosYRelative];
 
-  // const newPivot
-
-
-  // drawX(newPos, [255,255,255,255]);
-
-  // TODO: The new pivot point probably needs to be relative to the parent triangle.
-  // using the same pivot for every single triangle doesn't work.
-  // Previously you were using the new relative location of the parent triangle as pivot as well
-  // So that worked seamlessly, but only if pivot and pos was same.
-
-
   drawRecursiveGoldenTriangle(newPos, newHeight, newRotation, [0,255,0,255], pivot);
-
   
 }
 
@@ -273,14 +241,11 @@ function updateCanvas() {
 }
 
 let triangleHeight = height - 50;
-// let triangleLocation = [(width/2) - 70.5780300722,(height/2) + 134.2473908148];
 
 let pivotPoint = [(width/2),(height/2) -50];
 let triangleLocation = [width/2, height/2];
 
-// console.log(triangeLocation)
-// [291.5, 660]
-// [362.0780300721824, 525.7526091851511]
+
 let triangleRotation = 0;
 
 function loop() {
@@ -289,7 +254,7 @@ function loop() {
   const startTime = Date.now()
   wipeCanvasData();
 
-  // triangleHeight++; 
+  triangleHeight++; 
   triangleRotation = triangleRotation + 0.005;
 
 
