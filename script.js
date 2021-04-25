@@ -1,32 +1,6 @@
 // https://www.geogebra.org/m/sxEMtV6q
 
-const uniqid = require('uniqid')
-
-global.gameObjects = {}
-global.instantiate = function (classTemplate, args) {
-  const id = uniqid()
-  const instance = new classTemplate(Object.assign({
-    id
-  }, args))
-  gameObjects[id] = instance
-  return instance
-}
-global.destroy = function (instance) {
-  delete gameObjects[instance.id]
-}
-
-
-function updateGameObjects() {
-  for (const key in gameObjects) {
-    gameObjects[key].update()
-  }
-}
-
-function updateGameObjects() {
-  for (const key in gameObjects) {
-    gameObjects[key].render()
-  }
-}
+const { distance, degToRad, rotatePoint } = require('./math')
 
 const targetFPS = 60
 const targetFrameDuration = (1000 / targetFPS)
@@ -95,10 +69,6 @@ function drawTriangle(posA, posB, posC, color) {
   drawLine(posC, posA, color);
 }
 
-function degToRad (deg) {
-  return deg * (Math.PI/180);
-}
-
 
 function drawLine(start, end, color = [0,255,0,255]) {
 
@@ -133,39 +103,11 @@ function drawLine(start, end, color = [0,255,0,255]) {
 }
 
 
-/**
- * 
- * @param {float} pivotX 
- * @param {float} pivotY 
- * @param {float} angle 
- * @param {float[]} point 
- * @returns {float[]} point 
- */
-function rotatePoint(pivot, angle, point)
-{
-  const s = Math.sin(angle);
-  const c = Math.cos(angle);
-
-
-  const pointOriginX = point[0] - pivot[0];
-  const pointOriginY = point[1] - pivot[1];
-
-  // rotate point
-  const xNew = (pointOriginX * c) - (pointOriginY * s);
-  const yNew = (pointOriginX * s) + (pointOriginY * c);
-
-  const newPoint = [
-    pivot[0] + xNew,
-    pivot[1] + yNew,
-  ]
-
-  return newPoint;
-}
 
 // https://www.onlinemath4all.com/90-degree-clockwise-rotation.html
 // https://stackoverflow.com/questions/2259476/rotating-a-point-about-another-point-2d
 // Position is half way between points B and C 72 and 72, because AB/BC is golden ratio
-function drawGoldenTriangle(pos, height, rotation, color = [0,255,0,255], pivot) {
+function drawGoldenTriangle(pos, height, rotation, pivot) {
 
 // golden triangle degrees 72, 72, 36
 // golden gnomon 36, 36, 108
@@ -188,7 +130,7 @@ let i = 0;
 function drawRecursiveGoldenTriangle(pos, height, rotation, pivot) {
 
   
-  drawGoldenTriangle(pos, height, rotation, [0,255,0,255], pivot);
+  drawGoldenTriangle(pos, height, rotation, pivot);
   i++;
 
   if (i > 10) {
@@ -215,7 +157,7 @@ function drawRecursiveGoldenTriangle(pos, height, rotation, pivot) {
   
   const newPos = [newPointC[0] + newPosXRelative, newPointC[1] + newPosYRelative];
 
-  drawRecursiveGoldenTriangle(newPos, newHeight, newRotation, [0,255,0,255], pivot);
+  drawRecursiveGoldenTriangle(newPos, newHeight, newRotation, pivot);
   
 }
 
@@ -236,14 +178,60 @@ function drawX(pos, color = [0, 255,0,255]) {
 }
 
 
+const intersection = (p1, p2, p3, p4) => {
+  const l1A = (p2[1] - p1[1]) / (p2[0] - p1[0]);
+  const l1B = p1[1] - l1A * p1[0]
+
+  const l2A = (p4[1] - p3[1]) / (p4[0] - p3[0]);
+  const l2B = p3[1] - l2A * p3[0];
+  
+  const x = (l2B - l1B) / (l1A - l2A);
+  const y = x * l1A + l1B;
+  
+  return [x,y];
+}
+
+/**
+ * 
+ * @param {float[]} a point
+ * @param {float[]} b point
+ * @param {float[]} c point
+ * @returns point
+ */
+const startingPoint = (a, b, c) => {
+  const ac = distance(a, c);
+  const ab = distance(a, b);
+  const bc = distance(b, c);
+  // Law of cosines
+  const alpha = Math.acos((ab * ab + ac * ac - bc * bc) / (2 * ab * ac));
+  const gamma = Math.acos((ac * ac + bc * bc - ab * ab) / (2 * ac * bc));
+  const delta = Math.PI - alpha / 2 - gamma;
+  // Law of sines
+  const cd = ac * Math.sin(alpha / 2) / Math.sin(delta);
+  const d = [
+    cd * (b[0] - c[0]) / bc + c[0],
+    cd * (b[1] - c[1]) / bc + c[1]
+  ];
+  const e = [
+    (a[0] + c[0]) / 2,
+    (a[1] + c[1]) / 2
+  ]
+  const f = [
+    (a[0] + b[0]) / 2,
+    (a[1] + b[1]) / 2,
+  ]
+  return intersection(c, f, d, e);
+};
+
+
 function updateCanvas() {
   ctx.putImageData(canvasData, 0, 0);
 }
 
-let triangleHeight = height - 50;
+let triangleHeight = height - 200;
 
 let pivotPoint = [(width/2),(height/2) -50];
-let triangleLocation = [width/2, height/2];
+let triangleLocation = [width/2, height/2 + 50];
 
 
 let triangleRotation = 0;
@@ -254,16 +242,30 @@ function loop() {
   const startTime = Date.now()
   wipeCanvasData();
 
-  triangleHeight++; 
+  // triangleHeight++; 
   triangleRotation = triangleRotation + 0.005;
 
 
   // drawX(pivotPoint)
   // drawX(triangleLocation)
 
-  
 
-  drawRecursiveGoldenTriangle(triangleLocation, triangleHeight, triangleRotation, pivotPoint);
+  const baseLength = (Math.tan(degToRad(18)) * triangleHeight) * 2;
+
+  const pointA = [triangleLocation[0], triangleLocation[1] - triangleHeight]; // sharpest angle
+  const pointB = [triangleLocation[0] - (baseLength / 2), triangleLocation[1]]; 
+  const pointC = [triangleLocation[0] + (baseLength / 2), triangleLocation[1]];
+
+
+  const thePoint = startingPoint(pointA, pointB, pointC)
+
+  
+  drawX(pointA, [255,0,0,255])
+  drawX(pointB, [0,255,0,255])
+  drawX(pointC, [0,0,255,255])
+  drawX(thePoint, [0,255,0,255])
+
+  drawRecursiveGoldenTriangle(triangleLocation, triangleHeight, triangleRotation, thePoint);
 
   updateCanvas()
   const renderTime = Date.now() - startTime
@@ -274,3 +276,4 @@ function loop() {
 }
 
 loop()
+
